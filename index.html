@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#131110" />
+  <meta name="description" content="Forja Burgers — das Missões para sua mesa. Explore o cardápio e monte seu pedido pelo WhatsApp." />
+  <title>FORJA BURGERS — Das Missões para sua mesa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600;1,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #131110;
+      --ink-2: #1b1816;
+      --ink-3: #25201d;
+      --paper: #f4eee5;
+      --muted: #a9a098;
+      --copper: #c8794b;
+      --ember: #f15a24;
+      --ember-deep: #8b2e1d;
+      --line: rgba(231, 163, 112, .22);
+      --font-display: 'Barlow Condensed', Impact, sans-serif;
+      --font-body: 'DM Sans', Arial, sans-serif;
+      --font-accent: 'Playfair Display', Georgia, serif;
+      --radius: 18px;
+      --shadow: 0 20px 60px rgba(0,0,0,.28);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 95px; }
+    body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(--font-body); overflow-x: hidden; }
+    body.menu-open { overflow: hidden; }
+    ::selection { color: #fff; background: var(--ember-deep); }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; }
+    img { display: block; width: 100%; }
+    button:focus-visible, a:focus-visible { outline: 2px solid #ffb27d; outline-offset: 4px; }
+    .skip-link { position: fixed; left: 12px; top: -60px; z-index: 999; background: var(--paper); color: var(--ink); padding: 12px 16px; border-radius: 8px; }
+    .skip-link:focus { top: 12px; }
+
+    /* Grain and forge glow: all effects are generated in CSS; no library is required. */
+    .grain { pointer-events: none; position: fixed; inset: 0; z-index: 20; opacity: .055; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E"); }
+    #embers { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .48; }
+    .site-shell { position: relative; z-index: 2; }
+    .container { width: min(1180px, calc(100% - 48px)); margin-inline: auto; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 10px; color: #e6a477; font-size: .72rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
+    .eyebrow::before { content: ''; width: 24px; height: 1px; background: var(--ember); box-shadow: 0 0 14px var(--ember); }
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 26px; margin-bottom: 34px; }
+    .section-heading h2 { margin: 7px 0 0; font: 800 clamp(2.7rem, 6vw, 5rem)/.86 var(--font-display); letter-spacing: -.035em; text-transform: uppercase; }
+    .section-heading h2 em { color: var(--copper); font-style: normal; }
+    .section-heading p { max-width: 360px; color: var(--muted); font-size: .92rem; line-height: 1.7; margin: 0 0 3px; }
+    .fire-line { height: 1px; width: 100%; background: linear-gradient(90deg, transparent, var(--copper), var(--ember-deep), transparent); opacity: .7; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 11px; min-height: 48px; border: 1px solid transparent; border-radius: 5px; padding: 13px 18px; cursor: pointer; font-weight: 700; font-size: .82rem; letter-spacing: .06em; text-transform: uppercase; transition: transform .22s ease, background .22s ease, border-color .22s ease, box-shadow .22s ease; }
+    .btn:hover { transform: translateY(-3px); }
+    .btn-primary { background: var(--ember); color: #1a100c; box-shadow: 0 7px 28px rgba(241,90,36,.14); }
+    .btn-primary:hover { background: #ff793e; box-shadow: 0 10px 36px rgba(241,90,36,.28); }
+    .btn-outline { border-color: rgba(222,155,109,.45); background: rgba(20,17,15,.38); color: var(--paper); }
+    .btn-outline:hover { border-color: var(--ember); background: rgba(241,90,36,.09); }
+    .icon { width: 18px; height: 18px; flex: 0 0 auto; }
+
+    /* Header */
+    .top-note { position: relative; z-index: 30; text-align: center; padding: 8px 14px; background: #8f321d; color: #fff2e8; font-size: .67rem; letter-spacing: .16em; font-weight: 700; text-transform: uppercase; }
+    .top-note span { color: #ffc38d; }
+    .header { position: sticky; top: 0; z-index: 40; border-bottom: 1px solid rgba(219,145,91,.16); background: rgba(19,17,16,.86); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+    .nav { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 22px; }
+    .brand { display: inline-flex; align-items: center; gap: 11px; min-width: 185px; }
+    .brand-mark { width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid rgba(200,121,75,.8); border-radius: 50%; color: var(--ember); background: radial-gradient(circle, rgba(241,90,36,.12), transparent 68%); box-shadow: inset 0 0 20px rgba(241,90,36,.06), 0 0 22px rgba(241,90,36,.06); }
+    .brand-mark svg { width: 23px; height: 23px; }
+    .brand-word { display: flex; flex-direction: column; line-height: .82; }
+    .brand-word strong { font: 900 1.8rem/.82 var(--font-display); letter-spacing: .015em; }
+    .brand-word small { margin-top: 7px; color: #d7a27b; font-size: .56rem; font-weight: 700; letter-spacing: .32em; }
+    .nav-links { display: flex; align-items: center; gap: clamp(18px, 3vw, 38px); }
+    .nav-links a { position: relative; color: #d2c8bf; font-size: .77rem; font-weight: 600; transition: color .2s ease; }
+    .nav-links a::after { content: ''; position: absolute; left: 0; right: 100%; bottom: -8px; height: 1px; background: var(--ember); transition: right .22s ease; }
+    .nav-links a:hover { color: #fff; }
+    .nav-links a:hover::after { right: 0; }
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .cart-button { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 42px; padding: 0 13px; border: 1px solid var(--line); border-radius: 4px; color: var(--paper); background: transparent; cursor: pointer; }
+    .cart-count { display: inline-grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; background: var(--ember); color: var(--ink); font-size: .7rem; font-weight: 800; }
+    .menu-toggle { display: none; width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 4px; color: var(--paper); background: transparent; cursor: pointer; }
+
+    /* Hero */
+    .hero { min-height: min(790px, calc(100svh - 108px)); position: relative; display: flex; align-items: center; isolation: isolate; overflow: hidden; border-bottom: 1px solid rgba(200,121,75,.16); }
+    .hero::before { content: ''; position: absolute; inset: 0; z-index: -3; background: linear-gradient(90deg, rgba(19,17,16,.99) 0%, rgba(19,17,16,.92) 34%, rgba(19,17,16,.45) 65%, rgba(19,17,16,.34) 100%), linear-gradient(0deg, var(--ink) 0%, transparent 20%, transparent 78%, rgba(19,17,16,.35) 100%), url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=2000&q=88') center 53%/cover no-repeat; transform: scale(1.04); animation: hero-arrive 1.3s cubic-bezier(.2,.7,.2,1) both; }
+    .hero::after { content: ''; position: absolute; z-index: -2; width: 56vw; height: 56vw; right: -12vw; top: -20vw; border-radius: 50%; background: radial-gradient(circle, rgba(241,90,36,.19), rgba(139,46,29,.06) 40%, transparent 70%); filter: blur(18px); animation: glow-breathe 6s ease-in-out infinite alternate; }
+    .hero-content { width: min(670px, 72%); padding: 90px 0 104px; position: relative; }
+    .hero-kicker { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; color: #edb58e; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .23em; animation: rise-in .8s .12s both; }
+    .hero-kicker .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ember); box-shadow: 0 0 12px var(--ember), 0 0 26px rgba(241,90,36,.65); }
+    .hero h1 { max-width: 770px; margin: 0; text-transform: uppercase; font: 900 clamp(4.7rem, 11.5vw, 9.5rem)/.77 var(--font-display); letter-spacing: -.055em; text-shadow: 0 8px 40px rgba(0,0,0,.36); animation: rise-in .95s .22s both; }
+    .hero h1 .line-stroke { display: block; color: transparent; -webkit-text-stroke: 1px rgba(244,238,229,.86); }
+    .hero h1 .hot { display: block; color: var(--ember); text-shadow: 0 0 35px rgba(241,90,36,.13); }
+    .hero-script { margin: 20px 0 0 5px; color: #d9b69c; font: italic 600 clamp(1.3rem, 3.1vw, 2.5rem)/1.15 var(--font-accent); animation: rise-in .9s .36s both; }
+    .hero-copy { max-width: 425px; margin: 24px 0 28px 5px; color: #c7beb5; font-size: .98rem; line-height: 1.75; animation: rise-in .9s .48s both; }
+    .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-left: 5px; animation: rise-in .9s .6s both; }
+    .hero-footnote { display: flex; align-items: center; gap: 10px; margin: 48px 0 0 5px; color: #9f9388; font-size: .68rem; letter-spacing: .15em; text-transform: uppercase; animation: rise-in .9s .7s both; }
+    .hero-footnote::before { content: ''; height: 1px; width: 44px; background: var(--copper); }
+    .hero-stamp { position: absolute; right: max(28px, calc((100vw - 1180px)/2)); bottom: 76px; width: 126px; height: 126px; display: grid; place-items: center; border: 1px solid rgba(226,153,103,.46); border-radius: 50%; transform: rotate(11deg); color: #e5a477; background: rgba(20,16,13,.42); box-shadow: inset 0 0 0 6px rgba(200,121,75,.06), 0 0 50px rgba(0,0,0,.2); animation: stamp-arrive 1s .9s both; }
+    .hero-stamp::before { content: ''; position: absolute; inset: 7px; border: 1px dashed rgba(226,153,103,.4); border-radius: 50%; }
+    .hero-stamp span { text-align: center; font: 800 .78rem/1.25 var(--font-display); letter-spacing: .15em; text-transform: uppercase; }
+    .hero-stamp strong { display: block; margin: 5px 0; font-size: 1.7rem; }
+    .scroll-cue { position: absolute; right: 34px; top: 42%; display: flex; align-items: center; gap: 12px; writing-mode: vertical-rl; color: rgba(245,238,229,.52); font-size: .62rem; letter-spacing: .2em; text-transform: uppercase; }
+    .scroll-cue i { height: 60px; width: 1px; background: linear-gradient(var(--ember), transparent); animation: scroll-line 1.7s ease-in-out infinite; }
+    .hero .small-spark { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #ffb168; box-shadow: 0 0 10px 3px rgba(241,90,36,.3); }
+
+    /* Marquee */
+    .marquee { overflow: hidden; border-bottom: 1px solid rgba(200,121,75,.26); background: #201714; transform: rotate(-1deg) scale(1.02); position: relative; z-index: 4; margin: -2px 0 0; }
+    .marquee-track { width: max-content; display: flex; align-items: center; gap: 30px; padding: 14px 0; animation: marquee 34s linear infinite; }
+    .marquee-track span { color: #e8b18a; font: 700 1rem var(--font-display); letter-spacing: .15em; text-transform: uppercase; white-space: nowrap; }
+    .marquee-track b { color: var(--ember); font-size: 1.2rem; }
+
+    /* Story / principles */
+    .story { position: relative; padding: 126px 0 112px; }
+    .story-grid { display: grid; grid-template-columns: .82fr 1.18fr; gap: 9%; align-items: center; }
+    .story-visual { position: relative; min-height: 450px; }
+    .story-photo { position: absolute; inset: 0 34px 34px 0; border-radius: 3px; overflow: hidden; background: #2b1c15; }
+    .story-photo img { height: 100%; object-fit: cover; filter: saturate(.8) contrast(1.08); }
+    .story-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(19,17,16,.5), transparent 60%), linear-gradient(90deg, rgba(241,90,36,.13), transparent 70%); }
+    .story-frame { position: absolute; z-index: -1; inset: 28px 0 0 28px; border: 1px solid rgba(200,121,75,.65); }
+    .story-tag { position: absolute; z-index: 2; left: -19px; bottom: 67px; writing-mode: vertical-rl; transform: rotate(180deg); color: #efb18a; font: 700 .73rem var(--font-display); letter-spacing: .22em; text-transform: uppercase; }
+    .story-seal { position: absolute; z-index: 3; width: 116px; height: 116px; right: 0; bottom: 0; display: grid; place-items: center; border: 1px solid var(--copper); border-radius: 50%; color: var(--paper); background: var(--ink); text-align: center; box-shadow: 0 14px 35px rgba(0,0,0,.42); }
+    .story-seal span { font: 800 .9rem/1.15 var(--font-display); letter-spacing: .09em; }
+    .story-seal strong { display: block; color: var(--ember); font-size: 1.1rem; }
+    .story-copy h2 { max-width: 620px; margin: 14px 0 22px; font: 800 clamp(3.1rem, 6.7vw, 6rem)/.86 var(--font-display); letter-spacing: -.03em; text-transform: uppercase; }
+    .story-copy h2 em { color: var(--copper); font: italic 600 .55em/1 var(--font-accent); letter-spacing: -.02em; text-transform: none; }
+    .story-copy p { max-width: 560px; color: #bdb2a8; line-height: 1.9; font-size: .96rem; }
+    .story-signature { display: flex; align-items: center; gap: 14px; margin-top: 31px; color: #e4a77d; font: italic 600 1.13rem var(--font-accent); }
+    .story-signature::before { content: ''; width: 42px; height: 1px; background: var(--ember); }
+
+    /* Menu */
+    .menu-section { padding: 104px 0 120px; background: linear-gradient(180deg, #191513 0%, #161311 100%); border-top: 1px solid rgba(200,121,75,.13); border-bottom: 1px solid rgba(200,121,75,.13); position: relative; }
+    .menu-section::before { content: 'FORJA'; position: absolute; left: -22px; top: 125px; color: rgba(200,121,75,.028); font: 900 clamp(10rem, 27vw, 29rem)/.8 var(--font-display); writing-mode: vertical-rl; pointer-events: none; }
+    .menu-section .container { position: relative; }
+    .menu-heading-note { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; color: #db9870; font-size: .74rem; letter-spacing: .18em; text-transform: uppercase; }
+    .menu-heading-note span { display: inline-grid; place-items: center; width: 26px; height: 26px; border: 1px solid var(--line); border-radius: 50%; color: var(--ember); }
+    .filter-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 31px; }
+    .filter-btn { border: 1px solid rgba(218,155,111,.27); border-radius: 3px; background: transparent; color: #bfb2a8; padding: 10px 14px; font-size: .72rem; font-weight: 700; letter-spacing: .05em; cursor: pointer; transition: all .2s ease; }
+    .filter-btn:hover, .filter-btn.active { border-color: var(--ember); color: var(--paper); background: rgba(241,90,36,.12); box-shadow: inset 0 -2px var(--ember); }
+    .menu-meta { margin-left: auto; color: #8c8178; font-size: .72rem; }
+    .product-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 17px; }
+    .product-card { min-width: 0; position: relative; border: 1px solid rgba(224,160,113,.17); border-radius: 9px; background: linear-gradient(150deg, rgba(50,39,32,.72), rgba(28,24,21,.9) 58%); overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,.12); transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease; }
+    .product-card:hover { transform: translateY(-7px); border-color: rgba(241,90,36,.7); box-shadow: 0 22px 42px rgba(0,0,0,.3), 0 0 28px rgba(241,90,36,.06); }
+    .product-card[hidden] { display: none; }
+    .product-photo { position: relative; aspect-ratio: 1.14 / 1; overflow: hidden; background: #32241c; }
+    .product-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s cubic-bezier(.2,.7,.2,1), filter .35s ease; filter: saturate(.83) contrast(1.05); }
+    .product-card:hover .product-photo img { transform: scale(1.07); filter: saturate(1.05) contrast(1.08); }
+    .product-photo::after { content: ''; position: absolute; inset: 35% 0 0; background: linear-gradient(0deg, rgba(19,17,16,.85), transparent); pointer-events: none; }
+    .product-number { position: absolute; z-index: 2; top: 13px; left: 13px; display: grid; place-items: center; width: 31px; height: 31px; border: 1px solid rgba(255,215,183,.45); border-radius: 50%; color: #fff2e8; background: rgba(19,17,16,.5); font: 700 .82rem var(--font-display); }
+    .product-tag { position: absolute; z-index: 2; right: 10px; top: 13px; padding: 7px 8px; border: 1px solid rgba(255,180,123,.4); background: rgba(19,17,16,.76); color: #f3b486; font: 700 .64rem var(--font-display); letter-spacing: .08em; text-transform: uppercase; }
+    .product-content { flex: 1; display: flex; flex-direction: column; padding: 17px 16px 15px; }
+    .product-name-row { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+    .product-name { margin: 0; font: 800 1.75rem/.9 var(--font-display); letter-spacing: .01em; text-transform: uppercase; }
+    .product-price { flex: 0 0 auto; color: #f2ae7e; font: 800 1.06rem var(--font-display); white-space: nowrap; }
+    .product-slogan { min-height: 37px; margin: 10px 0 12px; color: #bd9679; font: italic 600 .83rem/1.35 var(--font-accent); }
+    .product-description { margin: 0; color: #b9afa6; font-size: .76rem; line-height: 1.65; }
+    .product-weight { color: #e0a172; font-size: .68rem; font-weight: 700; letter-spacing: .05em; margin-top: 11px; }
+    .product-actions { display: flex; gap: 7px; margin-top: auto; padding-top: 17px; }
+    .product-actions .btn { min-height: 39px; padding: 9px 10px; font-size: .64rem; letter-spacing: .035em; flex: 1; }
+    .product-actions .btn-add { min-width: 0; }
+    .product-actions .btn-combo { flex: 0 0 auto; color: #edb38d; border-color: rgba(218,155,111,.35); background: transparent; padding-inline: 10px; }
+    .product-actions .btn-combo:hover { background: rgba(241,90,36,.12); border-color: var(--ember); }
+    .food-note { margin: 23px 0 0; color: #81776e; font-size: .72rem; line-height: 1.6; }
+    .food-note strong { color: #b69a84; }
+    .menu-divider { display: flex; align-items: center; gap: 15px; margin: 76px 0 28px; }
+    .menu-divider span { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--line)); }
+    .menu-divider span:last-child { transform: rotate(180deg); }
+    .menu-divider h3 { margin: 0; color: #d8a17c; font: 800 1.7rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; }
+    .extras-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+    .extra-card { min-width: 0; display: grid; grid-template-columns: 105px 1fr; border: 1px solid var(--line); background: rgba(36,29,25,.67); border-radius: 7px; overflow: hidden; transition: border-color .2s ease, transform .2s ease; }
+    .extra-card:hover { border-color: rgba(241,90,36,.7); transform: translateY(-3px); }
+    .extra-photo { min-height: 114px; background: #32251c; }
+    .extra-photo img { height: 100%; object-fit: cover; }
+    .extra-copy { display: flex; flex-direction: column; align-items: start; justify-content: center; padding: 12px; gap: 5px; }
+    .extra-copy h4 { margin: 0; font: 700 1.22rem/1 var(--font-display); text-transform: uppercase; }
+    .extra-copy p { margin: 0; color: #d9a17b; font-size: .8rem; font-weight: 700; }
+    .extra-copy button { margin-top: 5px; border: 0; padding: 0; color: var(--ember); background: none; font-size: .68rem; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+    .condiments { margin-top: 22px; display: grid; grid-template-columns: .8fr 1.2fr; gap: 17px; }
+    .condiment-panel { border: 1px solid var(--line); background: rgba(29,24,21,.74); border-radius: 7px; padding: 22px; }
+    .condiment-panel h4 { margin: 0 0 15px; font: 800 1.45rem var(--font-display); letter-spacing: .08em; text-transform: uppercase; }
+    .sauce-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .sauce-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid rgba(218,155,111,.18); border-radius: 4px; color: #d5c9bf; font-size: .74rem; }
+    .sauce-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--sauce); box-shadow: 0 0 8px color-mix(in srgb, var(--sauce), transparent 55%); }
+    .condiment-panel p { margin: 13px 0 0; color: #8e8379; font-size: .7rem; }
+    .drink-list { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }
+    .drink { padding: 12px; background: #241e1a; border-radius: 4px; display: flex; flex-direction: column; gap: 7px; min-height: 86px; }
+    .drink strong { font: 700 1.1rem var(--font-display); }
+    .drink span { color: #d7a078; font-size: .67rem; }
+
+    /* Ordering callout */
+    .order-section { position: relative; padding: 100px 0; overflow: hidden; }
+    .order-panel { display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: center; position: relative; padding: clamp(27px, 5vw, 55px); border: 1px solid rgba(230,155,105,.45); border-radius: 9px; background: radial-gradient(ellipse at 0% 100%, rgba(139,46,29,.34), transparent 52%), linear-gradient(115deg, #2a1c16, #1b1714 68%); box-shadow: var(--shadow); overflow: hidden; }
+    .order-panel::after { content: 'F'; position: absolute; right: 16%; top: 50%; transform: translateY(-56%); color: rgba(241,90,36,.055); font: 900 23rem/.8 var(--font-display); pointer-events: none; }
+    .order-panel > * { position: relative; z-index: 1; }
+    .order-panel h2 { margin: 12px 0 14px; font: 900 clamp(2.9rem, 6.5vw, 5.7rem)/.82 var(--font-display); letter-spacing: -.03em; text-transform: uppercase; }
+    .order-panel h2 em { color: var(--ember); font-style: normal; }
+    .order-panel p { max-width: 530px; margin: 0; color: #c8b8ab; font-size: .9rem; line-height: 1.8; }
+    .order-action { display: flex; flex-direction: column; align-items: start; gap: 12px; }
+    .order-action small { max-width: 210px; color: #99877b; font-size: .68rem; line-height: 1.5; }
+
+    /* Contact + footer */
+    .contact { padding: 82px 0 76px; background: #100e0d; border-top: 1px solid rgba(200,121,75,.2); }
+    .contact-grid { display: grid; grid-template-columns: 1.2fr .8fr .8fr; gap: 45px; }
+    .contact-brand h2 { margin: 16px 0; font: 900 3.1rem/.8 var(--font-display); letter-spacing: -.025em; }
+    .contact-brand h2 span { color: var(--ember); }
+    .contact-brand p { max-width: 330px; color: #9e9288; font-size: .83rem; line-height: 1.8; }
+    .footer-title { margin: 5px 0 18px; color: #d49a73; font: 800 1.2rem var(--font-display); letter-spacing: .11em; text-transform: uppercase; }
+    .footer-links { display: flex; flex-direction: column; gap: 12px; color: #bdb0a5; font-size: .82rem; }
+    .footer-links a:hover { color: var(--ember); }
+    .contact-link { display: inline-flex; align-items: center; gap: 9px; }
+    .footer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 58px; padding-top: 19px; border-top: 1px solid rgba(200,121,75,.16); color: #746a61; font-size: .68rem; }
+    .footer-bottom span:last-child { color: #9e7a63; letter-spacing: .08em; text-transform: uppercase; }
+
+    /* Cart modal and toast */
+    dialog { width: min(530px, calc(100% - 24px)); max-height: min(82vh, 760px); padding: 0; border: 1px solid rgba(218,155,111,.45); border-radius: 12px; color: var(--paper); background: #1a1613; box-shadow: 0 30px 100px rgba(0,0,0,.65); }
+    dialog::backdrop { background: rgba(7,6,5,.78); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); }
+    .cart-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 22px 23px; border-bottom: 1px solid var(--line); }
+    .cart-head h2 { margin: 0; font: 800 2rem var(--font-display); text-transform: uppercase; }
+    .icon-button { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 50%; color: var(--paper); background: transparent; cursor: pointer; }
+    .cart-body { padding: 18px 23px 23px; max-height: calc(82vh - 160px); overflow: auto; }
+    .cart-empty { padding: 24px 0; color: #9f9185; text-align: center; line-height: 1.7; }
+    .cart-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 14px 0; border-bottom: 1px solid rgba(218,155,111,.13); }
+    .cart-row h3 { margin: 0 0 5px; font: 700 1.28rem var(--font-display); text-transform: uppercase; }
+    .cart-row small { color: #a89a8d; font-size: .72rem; line-height: 1.5; }
+    .cart-row-price { text-align: right; color: #edaa79; font-weight: 700; font-size: .83rem; white-space: nowrap; }
+    .qty-controls { display: inline-flex; align-items: center; gap: 9px; margin-top: 10px; }
+    .qty-controls button { display: grid; place-items: center; width: 27px; height: 27px; border: 1px solid var(--line); border-radius: 3px; color: var(--paper); background: transparent; cursor: pointer; }
+    .qty-controls span { min-width: 13px; text-align: center; font-size: .8rem; }
+    .remove-item { margin-left: 6px; border: 0 !important; color: #db8262 !important; font-size: .7rem !important; }
+    .cart-total { display: flex; justify-content: space-between; gap: 15px; margin: 20px 0; font-size: .85rem; }
+    .cart-total strong { color: #f1b082; font: 800 1.55rem var(--font-display); }
+    .cart-disclaimer { color: #8e8278; font-size: .7rem; line-height: 1.55; margin: 0 0 15px; }
+    .cart-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .cart-actions .btn { font-size: .7rem; padding-inline: 11px; }
+    .toast { position: fixed; right: 22px; bottom: 24px; z-index: 100; display: flex; align-items: center; gap: 10px; max-width: calc(100% - 44px); padding: 14px 17px; border: 1px solid rgba(241,90,36,.65); border-radius: 6px; color: #f8e9dc; background: #211813; box-shadow: 0 15px 45px rgba(0,0,0,.45); font-size: .8rem; opacity: 0; pointer-events: none; transform: translateY(12px); transition: opacity .25s ease, transform .25s ease; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ember); box-shadow: 0 0 12px var(--ember); }
+    .whatsapp-float { position: fixed; z-index: 35; right: 23px; bottom: 22px; display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid rgba(255,255,255,.3); border-radius: 50%; color: #fff; background: #237b4b; box-shadow: 0 7px 25px rgba(0,0,0,.38); transition: transform .2s ease, box-shadow .2s ease; }
+    .whatsapp-float:hover { transform: translateY(-4px) scale(1.03); box-shadow: 0 12px 32px rgba(35,123,75,.35); }
+    .whatsapp-float svg { width: 26px; height: 26px; }
+    .scroll-progress { position: fixed; z-index: 50; top: 0; left: 0; height: 2px; width: 0; background: linear-gradient(90deg, var(--ember-deep), var(--ember), #ffc18c); box-shadow: 0 0 10px var(--ember); }
+
+    /* Entrance and interaction animation */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+    .reveal.is-visible { opacity: 1; transform: translateY(0); }
+    .product-card.reveal:nth-child(4n+2) { transition-delay: .07s; }
+    .product-card.reveal:nth-child(4n+3) { transition-delay: .14s; }
+    .product-card.reveal:nth-child(4n+4) { transition-delay: .21s; }
+    @keyframes rise-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes hero-arrive { from { transform: scale(1.1); filter: saturate(.65); } to { transform: scale(1.04); filter: saturate(1); } }
+    @keyframes glow-breathe { from { opacity: .55; transform: scale(.88); } to { opacity: 1; transform: scale(1.1); } }
+    @keyframes stamp-arrive { from { opacity: 0; transform: rotate(-15deg) scale(.76); } to { opacity: 1; transform: rotate(11deg) scale(1); } }
+    @keyframes scroll-line { 0%,100% { transform: scaleY(.68); transform-origin: top; opacity: .5; } 50% { transform: scaleY(1); transform-origin: top; opacity: 1; } }
+    @keyframes marquee { to { transform: translateX(-50%); } }
+    @keyframes slow-rotate { to { transform: rotate(360deg); } }
+
+    @media (max-width: 1050px) {
+      .product-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .hero h1 { font-size: clamp(4.6rem, 12vw, 8rem); }
+      .story-grid { gap: 6%; }
+      .extras-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .contact-grid { gap: 28px; }
+    }
+    @media (max-width: 760px) {
+      .container { width: min(100% - 34px, 560px); }
+      .top-note { font-size: .58rem; letter-spacing: .1em; }
+      .nav { min-height: 68px; }
+      .brand { min-width: auto; }
+      .brand-mark { width: 37px; height: 37px; }
+      .brand-word strong { font-size: 1.56rem; }
+      .nav-links { display: none; position: fixed; top: 68px; left: 0; right: 0; padding: 22px 24px 28px; flex-direction: column; align-items: stretch; gap: 0; background: rgba(19,17,16,.98); border-bottom: 1px solid var(--line); box-shadow: 0 20px 40px rgba(0,0,0,.3); }
+      .nav-links.open { display: flex; }
+      .nav-links a { padding: 15px 0; border-bottom: 1px solid rgba(200,121,75,.12); font-size: .9rem; }
+      .nav-links a::after { display: none; }
+      .nav-actions .btn { display: none; }
+      .cart-button { gap: 6px; min-height: 39px; padding-inline: 9px; }
+      .menu-toggle { display: grid; place-items: center; }
+      .hero { min-height: 710px; min-height: min(760px, calc(100svh - 95px)); align-items: end; }
+      .hero::before { background: linear-gradient(90deg, rgba(19,17,16,.86), rgba(19,17,16,.49) 75%, rgba(19,17,16,.38)), linear-gradient(0deg, var(--ink) 0%, rgba(19,17,16,.2) 42%, rgba(19,17,16,.35) 100%), url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1200&q=85') 57% center/cover no-repeat; }
+      .hero-content { width: 100%; padding: 96px 0 93px; }
+      .hero h1 { font-size: clamp(4.2rem, 18vw, 7.4rem); }
+      .hero-copy { max-width: 365px; font-size: .89rem; }
+      .hero-stamp { width: 85px; height: 85px; bottom: 24px; right: 20px; }
+      .hero-stamp::before { inset: 5px; }
+      .hero-stamp span { font-size: .57rem; }
+      .hero-stamp strong { font-size: 1.15rem; margin: 2px 0; }
+      .scroll-cue { display: none; }
+      .hero-footnote { margin-top: 31px; font-size: .58rem; }
+      .marquee-track { gap: 20px; padding: 12px 0; }
+      .marquee-track span { font-size: .85rem; }
+      .story { padding: 76px 0 82px; }
+      .story-grid { grid-template-columns: 1fr; gap: 43px; }
+      .story-visual { min-height: 380px; width: 90%; margin-left: 5%; }
+      .story-copy h2 { font-size: clamp(3.4rem, 14vw, 5rem); }
+      .section-heading { display: block; margin-bottom: 27px; }
+      .section-heading p { margin-top: 18px; }
+      .section-heading h2 { font-size: clamp(3.2rem, 13vw, 4.6rem); }
+      .menu-section { padding: 76px 0 83px; }
+      .filter-row { gap: 6px; }
+      .filter-btn { padding: 9px 10px; font-size: .66rem; }
+      .menu-meta { width: 100%; margin: 7px 0 0; }
+      .product-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+      .product-photo { aspect-ratio: 1.02 / 1; }
+      .product-content { padding: 13px 11px 12px; }
+      .product-name { font-size: 1.48rem; }
+      .product-price { font-size: .95rem; }
+      .product-slogan { min-height: 41px; font-size: .76rem; margin: 9px 0; }
+      .product-description { font-size: .72rem; }
+      .product-weight { font-size: .63rem; }
+      .product-actions { flex-direction: column; gap: 6px; padding-top: 13px; }
+      .product-actions .btn { width: 100%; font-size: .65rem; min-height: 37px; }
+      .product-actions .btn-combo { flex: 1; }
+      .product-tag { font-size: .55rem; padding: 6px; }
+      .product-number { width: 26px; height: 26px; top: 8px; left: 8px; }
+      .menu-divider { margin: 55px 0 22px; gap: 10px; }
+      .menu-divider h3 { font-size: 1.3rem; }
+      .extras-grid { grid-template-columns: 1fr; gap: 10px; }
+      .extra-card { grid-template-columns: 105px 1fr; }
+      .extra-photo { min-height: 100px; }
+      .condiments { grid-template-columns: 1fr; gap: 10px; }
+      .condiment-panel { padding: 17px; }
+      .drink-list { grid-template-columns: repeat(3,1fr); }
+      .drink { padding: 10px 8px; }
+      .drink strong { font-size: 1rem; }
+      .order-section { padding: 73px 0; }
+      .order-panel { grid-template-columns: 1fr; gap: 25px; padding: 27px 23px; }
+      .order-panel h2 { font-size: clamp(3.3rem, 14vw, 5rem); }
+      .order-action { align-items: stretch; }
+      .order-action .btn { width: 100%; }
+      .order-action small { max-width: none; text-align: center; }
+      .contact { padding: 61px 0 35px; }
+      .contact-grid { grid-template-columns: 1fr 1fr; gap: 31px 18px; }
+      .contact-brand { grid-column: 1 / -1; }
+      .contact-brand h2 { font-size: 2.8rem; }
+      .footer-title { font-size: 1.06rem; }
+      .footer-links { font-size: .76rem; overflow-wrap: anywhere; }
+      .footer-bottom { margin-top: 39px; flex-direction: column; align-items: start; gap: 9px; }
+      .whatsapp-float { right: 14px; bottom: 14px; width: 49px; height: 49px; }
+      .toast { right: 12px; bottom: 73px; }
+    }
+    @media (max-width: 390px) {
+      .container { width: calc(100% - 26px); }
+      .hero h1 { font-size: 4rem; }
+      .hero-actions .btn { flex: 1; padding-inline: 12px; font-size: .68rem; }
+      .product-name-row { flex-direction: column; gap: 5px; }
+      .product-price { font-size: .94rem; }
+      .drink-list { grid-template-columns: 1fr; }
+      .drink { min-height: unset; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      #embers { display: none; }
+      .reveal { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+  <canvas id="embers" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="top-note">FORJA BURGERS <span>◆</span> DAS MISSÕES PARA SUA MESA</div>
+
+  <div class="site-shell">
+    <header class="header">
+      <nav class="nav container" aria-label="Navegação principal">
+        <a class="brand" href="#inicio" aria-label="Forja Burgers — início">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c.6 3.2-1.5 4.2-1.5 6.4 0 1.1.7 1.7 1.4 2.1-.2-2 2-3.1 2.2-5.1 2.4 2.2 4.4 4.9 4.4 8.1a6.5 6.5 0 1 1-13 0c0-2.1 1-4.1 2.4-5.7-.1 2.8 1.1 3.4 2 3.4 1.3 0 1.8-1.3 1.1-2.6C10 7.2 11.5 5.1 12 2.5Z"/><path d="M12.1 13.6c1.2 1.1 2.2 2.2 2.2 3.7a2.3 2.3 0 1 1-4.6 0c0-1 .6-2 1.5-2.9"/></svg>
+          </span>
+          <span class="brand-word"><strong>FORJA</strong><small>BURGERS</small></span>
+        </a>
+        <div class="nav-links" id="navLinks">
+          <a href="#manifesto">Nossa essência</a>
+          <a href="#cardapio">Cardápio</a>
+          <a href="#acompanhamentos">Acompanhamentos</a>
+          <a href="#contato">Contato</a>
+        </div>
+        <div class="nav-actions">
+          <button class="cart-button" id="openCart" type="button" aria-label="Abrir seu pedido">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.2 10.1a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
+            <span class="cart-label">Meu pedido</span><span class="cart-count" id="cartCount">0</span>
+          </button>
+          <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="navLinks" type="button"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        </div>
+      </nav>
+    </header>
+
+    <main id="conteudo">
+      <section class="hero" id="inicio" aria-labelledby="heroTitle">
+        <div class="container">
+          <div class="hero-content">
+            <div class="hero-kicker"><span class="dot"></span> Sabor com identidade. Atitude de sobra.</div>
+            <h1 id="heroTitle"><span class="line-stroke">Não é só</span><span class="hot">fome.</span><span>É FORJA.</span></h1>
+            <p class="hero-script">Das Missões para sua mesa.</p>
+            <p class="hero-copy">Personalidade em cada camada. Escolha o seu, monte o pedido e deixe o próximo capítulo por nossa conta.</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#cardapio">Explorar cardápio <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 5l7 7-7 7"/></svg></a>
+              <a class="btn btn-outline" href="#manifesto">Conheça a Forja</a>
+            </div>
+            <div class="hero-footnote">Identidade forte. Sabor sem atalho.</div>
+          </div>
+        </div>
+        <div class="hero-stamp" aria-label="Das Missões para sua mesa"><span>Feito com<br/>personalidade<strong>✦</strong>Forja Burgers</span></div>
+        <div class="scroll-cue" aria-hidden="true"><i></i>Desça para descobrir</div>
+      </section>
+
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee-track">
+          <span>Das Missões para sua mesa</span><b>✦</b><span>Respeito ao sabor</span><b>✦</b><span>Escolha seu próximo favorito</span><b>✦</b><span>Forja Burgers</span><b>✦</b><span>Das Missões para sua mesa</span><b>✦</b><span>Respeito ao sabor</span><b>✦</b><span>Escolha seu próximo favorito</span><b>✦</b><span>Forja Burgers</span><b>✦</b>
+        </div>
+      </div>
+
+      <section class="story" id="manifesto">
+        <div class="container story-grid">
+          <div class="story-visual reveal">
+            <div class="story-photo"><img src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1000&q=85" alt="Hambúrguer artesanal em fotografia de referência" loading="lazy" /></div>
+            <div class="story-frame"></div>
+            <div class="story-tag">Raiz • Brasa • Personalidade</div>
+            <div class="story-seal"><span>DAS<strong>✦</strong>MISSÕES</span></div>
+          </div>
+          <div class="story-copy reveal">
+            <span class="eyebrow">A essência da casa</span>
+            <h2>Uma marca<br/>com <em>brasa na alma.</em></h2>
+            <p>A Forja carrega no nome a força do fogo e no cardápio uma coleção de hambúrgueres com personalidade própria. Dos sabores clássicos às combinações mais robustas, cada escolha tem seu nome, sua história e seu lugar à mesa.</p>
+            <p>Explore o cardápio com calma, confira os ingredientes e monte seu pedido. O próximo favorito pode estar a uma mordida de distância.</p>
+            <div class="story-signature">Das Missões para sua mesa.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="menu-section" id="cardapio">
+        <div class="container">
+          <div class="section-heading reveal">
+            <div><span class="eyebrow">Escolha sua forja</span><h2>Cardápio <em>da casa.</em></h2></div>
+            <p>Oito personalidades no pão brioche. Confira os ingredientes, encontre seu favorito e adicione ao pedido.</p>
+          </div>
+          <div class="menu-heading-note"><span>✦</span> Hambúrgueres & escolhas da casa</div>
+          <div class="filter-row" role="group" aria-label="Filtrar o cardápio">
+            <button class="filter-btn active" data-filter="todos" aria-pressed="true" type="button">Tudo</button>
+            <button class="filter-btn" data-filter="hamburguer" aria-pressed="false" type="button">Hambúrgueres</button>
+            <button class="filter-btn" data-filter="smash" aria-pressed="false" type="button">Linha smash</button>
+            <button class="filter-btn" data-filter="acompanhamento" aria-pressed="false" type="button">Acompanhamentos</button>
+            <button class="filter-btn" data-filter="bebida" aria-pressed="false" type="button">Bebidas</button>
+            <button class="filter-btn" data-filter="molho" aria-pressed="false" type="button">Molhos</button>
+            <span class="menu-meta" id="menuMeta">8 hambúrgueres • preços conforme referência fornecida</span>
+          </div>
+          <div class="product-grid" id="productGrid" aria-live="polite">
+            <!-- Images are editorial placeholders. Replace with approved Forja product photos before launch. -->
+            <article class="product-card reveal" data-category="hamburguer" data-id="guarani">
+              <div class="product-photo"><img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=750&q=82" alt="Hambúrguer de referência com queijo e complementos" loading="lazy"/><span class="product-number">01</span><span class="product-tag">A história da casa</span></div>
+              <div class="product-content"><div class="product-name-row"><h3 class="product-name">O Guarani</h3><span class="product-price">R$ 32,90</span></div><p class="product-slogan">“O sabor que carrega nossa história.”</p><p class="product-description">Brioche artesanal, blend bovino 150 g, cheddar, bacon crocante, cebola caramelizada, picles e molho Forja.</p><div class="product-weight">BLEND BOVINO • 150 G</div><div class="product-actions"><button class="btn btn-primary btn-add" data-add="guarani" type="button">Adicionar +</button><button class="btn btn-combo" data-combo="guarani" type="button">+ combo 9,90</button></div></div>
+            </article>
+            <article class="product-card reveal" data-category="hamburguer" data-id="tropeiro">
+              <div class="product-photo"><img src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=750&q=82" alt="Hambúrguer artesanal de referência com vegetais frescos" loading="lazy"/><span class="product-number">02</span><span class="product-tag">Raiz regional</span></div>
+              <div class="product-content"><div class="product-name-row"><h3 class="product-name">O Tropeiro</h3><span class="product-price">R$ 37,90</span></div><p class="product-slogan">“Para quem encara qualquer estrada.”</p><p class="product-description">Brioche artesanal, blend bovino 150 g, queijo colonial, rúcula, tomate e molho Forja.</p><div class="product-weight">BLEND BOVINO • 150 G</div><div class="product-actions"><button class="btn btn-primary btn-add" data-add="tropeiro" type="button">Adicionar +</button><button class="btn btn-combo" data-combo="tropeiro" type="button">+ combo 9,90</button></div></div>
+            </article>
+            <article class="product-card reveal" data-category="hamburguer" data-id="campeiro">
+              <div class="product-photo"><img src="https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&w=750&q=82" alt="Hambúrguer de referência com alface, tomate e queijo" loading="lazy"/><span class="product-number">03</span><span class="product-tag">Clássico</span></div>
+              <div class="product-content"><div class="product-name-row"><h3 class="product-name">O Campeiro</h3><span class="product-price">R$ 29,90</span></div><p class="product-slogan">“A simplicidade feita do jeito certo.”</p><p class="product-description">Brioche artesanal, blend bovino 150 g, queijo colonial, alface, tomate, cebola roxa e molho Forja.</p><div class="product-weight">BLEND BOVINO • 150 G</div><div class="product-actions"><button class="btn btn-primary btn-add" data-add="campeiro" type="button">Adicionar +</button><button class="btn btn-combo" data-combo="campeiro" type="button">+ combo 9,90</button></div></div>
+            </article>
+            <article class="product-card reveal" data-category="hamburguer" data-id="farrapo">
+              <div class="product-photo"><img src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=750&q=82" alt="Hambúrguer de referência com queijo e cobertura crocante" loading="lazy"/><span class="product-number">04</span><span class="product-tag">Crocância</span></div>
+              <div class="product-content"><div class="product-name-row"><h3 class="product-name">O Farrapo</h3><span class="product-price">R$ 32,90</span></div><p class="product-slogan">“Imbatível do começo ao último pedaço.”</p><p class="product-description">Brioche artesanal, blend bovino 150 g, cheddar, Doritos, bacon crocante, molho Forja e maionese temperada.</p><div class="product-weight">BLEND BOVINO • 150 G</div><div class="product-actions"><button class="btn btn-primary btn-add" data-add="farrapo" type="button">Adicionar +</button><button class="btn btn-combo" data-combo="farrapo" type="button">+ combo 9,90</button></div></div>
+            </article>
+            <article class="product-card reveal" data-category="hamburguer" data-id="curumim">
+              <div class="product-photo"><img src="https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=750&q=82" alt="Hambúrguer de referência com cheddar" loading="lazy"/><span class="product-number">05</span><span class="product-tag">Menor no tamanho</span></div>
+              <div class="product-content"><div class="product-name-row"><h3 class="product-name">O Curumim</h3><span class="product-price">R$ 24,90</span></div><p class="product-slogan">“Pequeno no tamanho, grande no sabor.”</p><p class="product-description">Brioche artesanal, blend bovino 120 g, cheddar, ketchup e molho Forja.</p><div class="product-weight">BLEND BOVINO • 120 G</div><div class="product-actions"><button class="btn btn-primary btn-add" data-add="curumim" type="button">Adicionar +</button><button class="btn btn-combo" data-combo="curumim" type="button">+ combo 9,90</button></div></div>
+            </article>
+            <article class="product-card reveal" data-category="hamburguer" data-id="sepe">
+              <div class="product-photo"><img src="https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?auto=format&fit=crop&w=750&q=82" alt="Hambúrguer de referência com carne e complementos" loading="lazy"/><span class="product-number">06</span><span class="product-tag">Coragem em cada mordida</span></div>
+              <div class="product-content"><div class="product-name-row"><h3 class="product-name">O Sepé</h3><span class="product-price">R$ 43,90</span></div><p class="product-slogan">“Coragem em cada mordida.”</p><p class="product-description">Brioche artesanal, blend bovino 150 g, cheddar, bacon artesanal, rúcula, cebola caramelizada e molho Forja.</p><div class="product-weight">BLEND BOVINO • 150 G</div><div class="product-actions"><button class="btn btn-primary btn-add" data-add="sepe" type="button">Adicionar +</button><button class="btn btn-combo" data-combo="sepe" type="button">+ combo 9,90</button></div></div>
+            </article>
+            <article class="product-card reveal" data-category="smash" data-id="taura">
+              <div class="product-photo"><img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=750&q=82" alt="Hambúrguer de referência com duas camadas de carne" loading="lazy"/><span class="product-number">07</span><span class="product-tag">Duplo smash</span></div>
+              <div class="product-content"><div class="product-name-row"><h3 class="product-name">O Taura</h3><span class="product-price">R$ 39,90</span></div><p class="product-slogan">“Feito para quem tem fome de verdade.”</p><p class="product-description">Brioche artesanal, 2 smash de 100 g, cheddar, bacon, onion rings, rúcula, molho Forja e mostarda e mel.</p><div class="product-weight">2 × SMASH DE 100 G</div><div class="product-actions"><button class="btn btn-primary btn-add" data-add="taura" type="button">Adicionar +</button><button class="btn btn-combo" data-combo="taura" type="button">+ combo 9,90</button></div></div>
+            </article>
+            <article class="product-card reveal" data-category="smash" data-id="bagual">
+              <div class="product-photo"><img src="https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&w=750&q=82" alt="Hambúrguer de referência alto com várias camadas" loading="lazy"/><span class="product-number">08</span><span class="product-tag">O bruto da casa</span></div>
+              <div class="product-content"><div class="product-name-row"><h3 class="product-name">O Bagual</h3><span class="product-price">R$ 49,90</span></div><p class="product-slogan">“O bruto da casa.”</p><p class="product-description">Brioche artesanal, 3 smash de 100 g, cheddar, bacon, cebola caramelizada, onion rings, molho Forja e molho bacon.</p><div class="product-weight">3 × SMASH DE 100 G</div><div class="product-actions"><button class="btn btn-primary btn-add" data-add="bagual" type="button">Adicionar +</button><button class="btn btn-combo" data-combo="bagual" type="button">+ combo 9,90</button></div></div>
+            </article>
+          </div>
+          <p class="food-note"><strong>Importante:</strong> as fotografias do catálogo são imagens ilustrativas temporárias e não representam necessariamente a montagem exata dos produtos. Substitua pelas fotos oficiais da Forja antes de divulgar o site como catálogo definitivo.</p>
+
+          <div class="menu-divider" id="acompanhamentos"><span></span><h3>Ao lado da brasa</h3><span></span></div>
+          <div class="extras-grid">
+            <article class="extra-card" data-category="acompanhamento" data-id="batata-tradicional">
+              <div class="extra-photo"><img src="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=400&q=80" alt="Porção de batatas fritas" loading="lazy"/></div>
+              <div class="extra-copy"><h4>Batata frita tradicional</h4><p>R$ 8,90</p><button data-add="batata-tradicional" type="button">Adicionar ao pedido +</button></div>
+            </article>
+            <article class="extra-card" data-category="acompanhamento" data-id="batata-cheddar-bacon">
+              <div class="extra-photo"><img src="https://images.unsplash.com/photo-1518013431117-eb1465fa5752?auto=format&fit=crop&w=400&q=80" alt="Batatas fritas com cobertura, imagem ilustrativa" loading="lazy"/></div>
+              <div class="extra-copy"><h4>Batata com cheddar e bacon</h4><p>R$ 15,90</p><button data-add="batata-cheddar-bacon" type="button">Adicionar ao pedido +</button></div>
+            </article>
+            <article class="extra-card" data-category="acompanhamento" data-id="onion-rings">
+              <div class="extra-photo"><img src="https://images.unsplash.com/photo-1639024471283-03518883512d?auto=format&fit=crop&w=400&q=80" alt="Anéis de cebola empanados, imagem ilustrativa" loading="lazy"/></div>
+              <div class="extra-copy"><h4>Onion rings</h4><p>R$ 18,90</p><button data-add="onion-rings" type="button">Adicionar ao pedido +</button></div>
+            </article>
+          </div>
+
+          <div class="condiments">
+            <div class="condiment-panel" data-category="molho">
+              <h4>Molhos da casa</h4>
+              <div class="sauce-list">
+                <span class="sauce-chip" style="--sauce:#c28a2b"><i></i>Mostarda e mel</span>
+                <span class="sauce-chip" style="--sauce:#64864b"><i></i>Molho verde</span>
+                <span class="sauce-chip" style="--sauce:#ac392b"><i></i>Molho de pimenta</span>
+                <span class="sauce-chip" style="--sauce:#d17c37"><i></i>Molho da casa</span>
+                <span class="sauce-chip" style="--sauce:#ded2b8"><i></i>Molho de alho</span>
+              </div>
+              <p>Valores não confirmados. Consulte disponibilidade e preço pelo WhatsApp.</p>
+              <button class="btn btn-outline" style="margin-top:16px;min-height:38px;font-size:.67rem" data-inquire="Molhos da casa" type="button">Consultar molhos</button>
+            </div>
+            <div class="condiment-panel" data-category="bebida">
+              <h4>Para acompanhar</h4>
+              <div class="drink-list">
+                <div class="drink"><strong>Água</strong><span>Com gás · valor a consultar</span></div>
+                <div class="drink"><strong>Coca-Cola</strong><span>Lata 350 ml · valor a consultar</span></div>
+                <div class="drink"><strong>Guaraná</strong><span>Lata 350 ml · valor a consultar</span></div>
+              </div>
+              <p>O combo adicional informado no cardápio inclui refrigerante em lata + porção de batata frita por R$ 9,90.</p>
+              <button class="btn btn-outline" style="margin-top:16px;min-height:38px;font-size:.67rem" data-inquire="Bebidas disponíveis e preços" type="button">Consultar bebidas</button>
+            </div>
+          </div>
+          <div class="menu-divider"><span></span><h3>Complete o pedido</h3><span></span></div>
+          <div class="order-panel reveal" style="margin-top:0">
+            <div><span class="eyebrow">Adicional da casa</span><h2>Vira <em>combo.</em></h2><p>Some ao hambúrguer um refrigerante em lata e uma porção de batata frita por <strong>R$ 9,90</strong>. Use o botão “+ combo” no hambúrguer escolhido.</p></div>
+            <div class="order-action"><button class="btn btn-primary" id="comboInfoBtn" type="button">Entendi, escolher hambúrguer <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h15M13 5l7 7-7 7"/></svg></button><small>O combo é um adicional ao pedido, não um hambúrguer separado.</small></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="order-section">
+        <div class="container">
+          <div class="order-panel reveal">
+            <div><span class="eyebrow">Seu próximo favorito está aqui</span><h2>Escolheu.<br/><em>Agora é só pedir.</em></h2><p>Monte sua seleção no cardápio e envie os itens pelo WhatsApp. A equipe confirma disponibilidade, valores pendentes e detalhes do pedido na conversa.</p></div>
+            <div class="order-action"><button class="btn btn-primary" id="openCartBottom" type="button">Abrir meu pedido <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h15M13 5l7 7-7 7"/></svg></button><small>O envio abre o WhatsApp com a mensagem preenchida. O pedido só estará confirmado após o retorno da equipe.</small></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="contact" id="contato">
+        <div class="container">
+          <div class="contact-grid">
+            <div class="contact-brand"><span class="eyebrow">Das Missões para sua mesa</span><h2>FORJA <span>BURGERS</span></h2><p>Uma identidade de fogo, raiz e personalidade. Explore o cardápio e fale com a Forja para conferir disponibilidade, bebidas, molhos e detalhes do pedido.</p></div>
+            <div><h3 class="footer-title">Encontre a Forja</h3><div class="footer-links"><a class="contact-link" href="https://www.instagram.com/forjaburgers_sa/" target="_blank" rel="noopener noreferrer"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".7" fill="currentColor"/></svg>@forjaburgers_sa</a><a class="contact-link" href="#cardapio"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4v16h16M8 15l3-3 2 2 5-6"/></svg>Ver cardápio</a></div></div>
+            <div><h3 class="footer-title">Contato & pedidos</h3><div class="footer-links"><a class="contact-link" id="footerWhatsApp" href="https://wa.me/5555981067139" target="_blank" rel="noopener noreferrer"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 11.5a8 8 0 0 1-11.9 7L4 20l1.4-4A8 8 0 1 1 20 11.5Z"/><path d="M9 8.5c.5 2 2 3.7 4.2 4.6l1.3-1 2 1c-.3 1.4-1.4 2.1-2.7 2-3.4-.4-6.7-3.8-7-6.8-.1-1 .6-2 2-2.3l1.1 2Z"/></svg>(55) 9 8106-7139*</a><small style="color:#73675d;font-size:.68rem;line-height:1.5">*Número informado na descrição do cardápio; confirmar antes da publicação.</small></div></div>
+          </div>
+          <div class="footer-bottom"><span>© <span id="yearNow"></span> Forja Burgers. Conteúdo sujeito a confirmação pelo estabelecimento.</span><span>Das Missões para sua mesa. ✦</span></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <a class="whatsapp-float" id="whatsappFloat" href="https://wa.me/5555981067139?text=Ol%C3%A1%2C%20Forja%20Burgers%21%20Gostaria%20de%20consultar%20o%20card%C3%A1pio." target="_blank" rel="noopener noreferrer" aria-label="Falar com a Forja Burgers pelo WhatsApp">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-11.9 7L4 20l1.4-4A8 8 0 1 1 20 11.5Z"/><path d="M9 8.5c.5 2 2 3.7 4.2 4.6l1.3-1 2 1c-.3 1.4-1.4 2.1-2.7 2-3.4-.4-6.7-3.8-7-6.8-.1-1 .6-2 2-2.3l1.1 2Z"/></svg>
+  </a>
+  <div class="toast" id="toast" role="status" aria-live="polite"><span class="toast-dot"></span><span id="toastMessage">Adicionado ao pedido.</span></div>
+
+  <dialog id="cartDialog" aria-labelledby="cartTitle">
+    <div class="cart-head"><div><span class="eyebrow">Sua seleção</span><h2 id="cartTitle">Meu pedido</h2></div><button class="icon-button" id="closeCart" aria-label="Fechar pedido" type="button"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <div class="cart-body"><div id="cartItems"></div><div class="cart-total"><span>Total parcial estimado</span><strong id="cartTotal">R$ 0,00</strong></div><p class="cart-disclaimer">Produtos sem preço confirmado aparecem como “a confirmar” e não entram na soma. O estabelecimento deve confirmar disponibilidade, preços pendentes, entrega e valor final antes de aceitar o pedido.</p><div class="cart-actions"><button class="btn btn-outline" id="continueShopping" type="button">Continuar escolhendo</button><button class="btn btn-primary" id="sendOrder" type="button">Enviar ao WhatsApp</button></div></div>
+  </dialog>
+
+  <script>
+    'use strict';
+    // ===== CONFIGURAÇÃO IMPORTANTE =====
+    // CONFIRME o WhatsApp oficial antes da publicação. Número provisório, informado na descrição do cardápio.
+    const WHATSAPP_NUMBER = '5555981067139';
+    const INSTAGRAM_URL = 'https://www.instagram.com/forjaburgers_sa/';
+    const COMBO_PRICE = 9.90;
+
+    const catalog = {
+      'guarani': { id:'guarani', name:'O Guarani', price:32.90, category:'hamburguer', details:'Brioche artesanal, blend bovino 150 g, cheddar, bacon crocante, cebola caramelizada, picles e molho Forja.' },
+      'tropeiro': { id:'tropeiro', name:'O Tropeiro', price:37.90, category:'hamburguer', details:'Brioche artesanal, blend bovino 150 g, queijo colonial, rúcula, tomate e molho Forja.' },
+      'campeiro': { id:'campeiro', name:'O Campeiro', price:29.90, category:'hamburguer', details:'Brioche artesanal, blend bovino 150 g, queijo colonial, alface, tomate, cebola roxa e molho Forja.' },
+      'farrapo': { id:'farrapo', name:'O Farrapo', price:32.90, category:'hamburguer', details:'Brioche artesanal, blend bovino 150 g, cheddar, Doritos, bacon crocante, molho Forja e maionese temperada.' },
+      'curumim': { id:'curumim', name:'O Curumim', price:24.90, category:'hamburguer', details:'Brioche artesanal, blend bovino 120 g, cheddar, ketchup e molho Forja.' },
+      'sepe': { id:'sepe', name:'O Sepé', price:43.90, category:'hamburguer', details:'Brioche artesanal, blend bovino 150 g, cheddar, bacon artesanal, rúcula, cebola caramelizada e molho Forja.' },
+      'taura': { id:'taura', name:'O Taura', price:39.90, category:'smash', details:'Brioche artesanal, 2 smash de 100 g, cheddar, bacon, onion rings, rúcula, molho Forja e molho mostarda e mel.' },
+      'bagual': { id:'bagual', name:'O Bagual', price:49.90, category:'smash', details:'Brioche artesanal, 3 smash de 100 g, cheddar, bacon, cebola caramelizada, onion rings, molho Forja e molho bacon.' },
+      'batata-tradicional': { id:'batata-tradicional', name:'Batata frita tradicional', price:8.90, category:'acompanhamento', details:'Porção tradicional de batata frita.' },
+      'batata-cheddar-bacon': { id:'batata-cheddar-bacon', name:'Batata frita com cheddar e bacon', price:15.90, category:'acompanhamento', details:'Porção de batata frita com cheddar e bacon.' },
+      'onion-rings': { id:'onion-rings', name:'Onion rings', price:18.90, category:'acompanhamento', details:'Porção de anéis de cebola empanados e fritos.' },
+      'combo': { id:'combo', name:'Adicional de combo', price:9.90, category:'combo', details:'Refrigerante em lata + porção de batata frita. Adicional informado no cardápio.' },
+      'agua': { id:'agua', name:'Água com gás', price:null, category:'bebida', details:'Preço a confirmar com o estabelecimento.' },
+      'coca': { id:'coca', name:'Coca-Cola lata 350 ml', price:null, category:'bebida', details:'Preço a confirmar com o estabelecimento.' },
+      'guarana': { id:'guarana', name:'Guaraná lata 350 ml', price:null, category:'bebida', details:'Preço a confirmar com o estabelecimento.' },
+      'molho-mostarda-mel': { id:'molho-mostarda-mel', name:'Molho mostarda e mel', price:null, category:'molho', details:'Preço e disponibilidade a confirmar.' },
+      'molho-verde': { id:'molho-verde', name:'Molho verde', price:null, category:'molho', details:'Preço e disponibilidade a confirmar.' },
+      'molho-pimenta': { id:'molho-pimenta', name:'Molho de pimenta', price:null, category:'molho', details:'Preço e disponibilidade a confirmar.' },
+      'molho-casa': { id:'molho-casa', name:'Molho da casa', price:null, category:'molho', details:'Preço e disponibilidade a confirmar.' },
+      'molho-alho': { id:'molho-alho', name:'Molho de alho', price:null, category:'molho', details:'Preço e disponibilidade a confirmar.' }
+    };
+
+    const cart = new Map();
+    const currency = value => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(value);
+    const dialog = document.getElementById('cartDialog');
+    const cartCount = document.getElementById('cartCount');
+    const cartItems = document.getElementById('cartItems');
+    const cartTotal = document.getElementById('cartTotal');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    let toastTimer;
+
+    function showToast(message) {
+      toastMessage.textContent = message;
+      toast.classList.add('show');
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+    function addItem(id, quantity = 1, notify = true) {
+      const item = catalog[id];
+      if (!item) return;
+      const existing = cart.get(id);
+      cart.set(id, { ...item, qty: (existing?.qty || 0) + quantity });
+      renderCart();
+      if (notify) showToast(`${item.name} adicionado ao pedido.`);
+    }
+    function addBurgerWithCombo(id) {
+      const burger = catalog[id];
+      if (!burger) return;
+      addItem(id, 1, false);
+      addItem('combo', 1, false);
+      showToast(`${burger.name} + adicional de combo adicionados.`);
+    }
+    function removeItem(id) { cart.delete(id); renderCart(); }
+    function changeQty(id, delta) {
+      const item = cart.get(id);
+      if (!item) return;
+      const qty = item.qty + delta;
+      if (qty <= 0) cart.delete(id);
+      else cart.set(id, { ...item, qty });
+      renderCart();
+    }
+    function renderCart() {
+      const items = [...cart.values()];
+      const count = items.reduce((sum, item) => sum + item.qty, 0);
+      cartCount.textContent = count;
+      cartCount.setAttribute('aria-label', `${count} itens no pedido`);
+      const knownTotal = items.reduce((sum, item) => sum + (typeof item.price === 'number' ? item.price * item.qty : 0), 0);
+      cartTotal.textContent = currency(knownTotal);
+      if (!items.length) {
+        cartItems.innerHTML = '<div class="cart-empty">Seu pedido ainda está vazio.<br/>Escolha algo do cardápio para começar. 🔥</div>';
+        return;
+      }
+      cartItems.innerHTML = items.map(item => `
+        <div class="cart-row">
+          <div><h3>${escapeHTML(item.name)}</h3><small>${escapeHTML(item.details)}</small><div class="qty-controls"><button type="button" data-qty="${item.id}" data-delta="-1" aria-label="Diminuir ${escapeHTML(item.name)}">−</button><span>${item.qty}</span><button type="button" data-qty="${item.id}" data-delta="1" aria-label="Aumentar ${escapeHTML(item.name)}">+</button><button type="button" class="remove-item" data-remove="${item.id}">Remover</button></div></div>
+          <div class="cart-row-price">${item.price == null ? 'A confirmar' : currency(item.price * item.qty)}<br/><small>${item.price == null ? 'valor pendente' : currency(item.price) + ' / un.'}</small></div>
+        </div>`).join('');
+    }
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[character]));
+    }
+    function openCart() { renderCart(); if (!dialog.open) dialog.showModal(); }
+    function sendWhatsAppOrder() {
+      const items = [...cart.values()];
+      if (!items.length) { showToast('Adicione pelo menos um item antes de enviar.'); return; }
+      const knownTotal = items.reduce((sum, item) => sum + (typeof item.price === 'number' ? item.price * item.qty : 0), 0);
+      const lines = items.map(item => `• ${item.qty}x ${item.name} — ${item.price == null ? 'preço a confirmar' : currency(item.price * item.qty)}`).join('\n');
+      const hasUnknown = items.some(item => item.price == null);
+      const message = `Olá, Forja Burgers! Gostaria de consultar/fazer este pedido:\n\n${lines}\n\nSubtotal dos itens com preço informado: ${currency(knownTotal)}${hasUnknown ? '\nHá item(ns) com preço a confirmar.' : ''}\n\nPor favor, confirmem disponibilidade, valor final e condições de entrega/retirada.\n\nPedido iniciado pelo catálogo online.`;
+      const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
+    document.addEventListener('click', event => {
+      const addButton = event.target.closest('[data-add]');
+      const comboButton = event.target.closest('[data-combo]');
+      const qtyButton = event.target.closest('[data-qty]');
+      const removeButton = event.target.closest('[data-remove]');
+      const inquireButton = event.target.closest('[data-inquire]');
+      if (addButton) addItem(addButton.dataset.add);
+      if (comboButton) addBurgerWithCombo(comboButton.dataset.combo);
+      if (qtyButton) changeQty(qtyButton.dataset.qty, Number(qtyButton.dataset.delta));
+      if (removeButton) removeItem(removeButton.dataset.remove);
+      if (inquireButton) {
+        const message = `Olá, Forja Burgers! Gostaria de consultar ${inquireButton.dataset.inquire.toLowerCase()}, por favor.`;
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+      }
+    });
+    document.getElementById('openCart').addEventListener('click', openCart);
+    document.getElementById('openCartBottom').addEventListener('click', openCart);
+    document.getElementById('closeCart').addEventListener('click', () => dialog.close());
+    document.getElementById('continueShopping').addEventListener('click', () => dialog.close());
+    document.getElementById('sendOrder').addEventListener('click', sendWhatsAppOrder);
+    document.getElementById('comboInfoBtn').addEventListener('click', () => document.getElementById('cardapio').scrollIntoView({ behavior:'smooth' }));
+    document.getElementById('yearNow').textContent = new Date().getFullYear();
+
+    // Accessible mobile navigation.
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+    menuToggle.addEventListener('click', () => {
+      const isOpen = navLinks.classList.toggle('open');
+      menuToggle.setAttribute('aria-expanded', String(isOpen));
+      menuToggle.setAttribute('aria-label', isOpen ? 'Fechar menu de navegação' : 'Abrir menu de navegação');
+      document.body.classList.toggle('menu-open', isOpen);
+    });
+    navLinks.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+      navLinks.classList.remove('open');
+      menuToggle.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('menu-open');
+    }));
+
+    // Menu filtering. All inventory lives in the catalog and filters never change prices or ingredients.
+    const filterLabels = { todos:'itens do cardápio', hamburguer:'hambúrgueres', smash:'itens da linha smash', acompanhamento:'acompanhamentos', bebida:'bebidas', molho:'molhos' };
+    document.querySelectorAll('.filter-btn').forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(btn => { btn.classList.toggle('active', btn === button); btn.setAttribute('aria-pressed', String(btn === button)); });
+      const filter = button.dataset.filter;
+      const cards = [...document.querySelectorAll('.product-card')];
+      cards.forEach(card => {
+        const visible = filter === 'todos' || (filter === 'hamburguer' && card.dataset.category === 'hamburguer') || (filter === 'smash' && card.dataset.category === 'smash');
+        card.hidden = !visible;
+      });
+      // Acompanhamentos, bebidas and sauces are separate below the burger grid; scroll to the section when selected.
+      if (filter === 'acompanhamento') document.getElementById('acompanhamentos').scrollIntoView({ behavior:'smooth', block:'start' });
+      if (filter === 'bebida') document.querySelector('[data-category="bebida"].condiment-panel').scrollIntoView({ behavior:'smooth', block:'center' });
+      if (filter === 'molho') document.querySelector('[data-category="molho"].condiment-panel').scrollIntoView({ behavior:'smooth', block:'center' });
+      document.getElementById('menuMeta').textContent = filter === 'todos' ? '8 hambúrgueres • preços conforme referência fornecida' : `${filterLabels[filter]} — consulte os detalhes abaixo`;
+    }));
+
+    // Scroll reveals, reading progress, and reduced-motion-aware ember particles.
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if ('IntersectionObserver' in window && !reduceMotion) {
+      const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+        if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); }
+      }), { threshold:.12, rootMargin:'0px 0px -25px 0px' });
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    } else document.querySelectorAll('.reveal').forEach(el => el.classList.add('is-visible'));
+
+    const progress = document.getElementById('scrollProgress');
+    let scrollTicking = false;
+    window.addEventListener('scroll', () => {
+      if (scrollTicking) return;
+      scrollTicking = true;
+      window.requestAnimationFrame(() => {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        progress.style.width = `${max > 0 ? (window.scrollY / max) * 100 : 0}%`;
+        scrollTicking = false;
+      });
+    }, { passive:true });
+
+    // Lightweight animated glowing embers, no external animation package required.
+    (function initEmbers() {
+      if (reduceMotion) return;
+      const canvas = document.getElementById('embers');
+      const ctx = canvas.getContext('2d', { alpha:true });
+      if (!ctx) return;
+      let width = 0, height = 0, dpr = Math.min(window.devicePixelRatio || 1, 1.6), particles = [];
+      const resize = () => {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr); canvas.height = Math.floor(height * dpr);
+        canvas.style.width = width + 'px'; canvas.style.height = height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const count = Math.min(52, Math.max(18, Math.floor(width / 25)));
+        particles = Array.from({ length:count }, () => makeParticle(true));
+      };
+      function makeParticle(randomY = false) {
+        return { x:Math.random()*width, y:randomY ? Math.random()*height : height + Math.random()*50, r:.5 + Math.random()*1.7, vy:.18 + Math.random()*.62, vx:(Math.random()-.5)*.28, alpha:.15 + Math.random()*.55, phase:Math.random()*Math.PI*2, hue:Math.random() > .72 ? 32 : 17 };
+      }
+      function frame(time) {
+        ctx.clearRect(0,0,width,height);
+        particles.forEach((p,i) => {
+          p.y -= p.vy; p.x += p.vx + Math.sin(time*.0005 + p.phase)*.16; p.phase += .008;
+          if (p.y < -10) particles[i] = makeParticle(false);
+          ctx.beginPath(); ctx.fillStyle = `hsla(${p.hue}, 95%, ${p.hue===32?66:57}%, ${p.alpha * (.65 + Math.sin(time*.002+p.phase)*.35)})`;
+          ctx.shadowBlur = 8; ctx.shadowColor = `hsla(${p.hue}, 95%, 50%, .5)`; ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+        });
+        ctx.shadowBlur = 0; window.requestAnimationFrame(frame);
+      }
+      resize(); window.addEventListener('resize', resize, { passive:true }); window.requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
